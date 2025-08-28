@@ -38,58 +38,65 @@ Production-ready Node/Express backend for Epistemy with MongoDB persistence and 
 ## AI pipeline (high-level diagram)
 
 ```
-Client (multipart/form-data: sessionId, studentId, transcript)
-				|
-				v
-Controller (/tutor/process-session) -> Service -> Orchestrator (runPipeline)
-				|
-				v
-[Preprocess]
-	Inputs:
-		- rawTranscriptText
-	Outputs:
-		- cleanText (full cleaned transcript)
-		- llmText (truncated for LLM), checksum, lang
-	Persist:
-		- Transcript.upsert({ sessionId, clean, checksum, lang })
-		- Session.upsert({ status: 'transcribed' })
-
-				|
-				v
-[Topics]
-	In: llmText
-	Out: { subject, subtopics[{ title, objective }] }
-	Persist: Session.topics
-
-				|
-				v
-[Summary]
-	In: llmText
-	Out: { executive, key_points[], misconceptions[] }
-	Persist: Session.summary
-
-				|
-				v
-[Progress]
-	In: llmText + previousText (prior session’s transcript for same student)
-	Out: { improvements[], gaps[], nextGoals[], rubric{ criteria[], levels } }
-	Persist: Session.progress
-
-				|
-				v
-[Quiz]
-	In: summary
-	Out (raw): array of MCQs
-	Normalize: ensure shape { subtopic?, q, choices[], answer_index, explanation, difficulty(1..3) }
-	Persist: Session.quiz
-
-				|
-				v
-[Finalize]
-	Build pack: { topics, summary, progress, quiz }
-	Persist: Session.pack, Session.status='processed'
-	Response: { sessionId, result: pack }
+┌────────────────────────────┐
+│   Transcript (current)     │
+│   + optional previous one  │
+└─────────────┬──────────────┘
+	      │
+	      ▼
+   ┌───────────────────┐
+   │   Preprocess      │
+   │  - Clean text     │
+   │  - Chunk & hash   │
+   └─────────┬─────────┘
+	     │
+ ┌───────────┼───────────────┐
+ ▼           ▼               ▼
+┌────────────────┐  ┌────────────────┐  ┌────────────────────┐
+│  Topics        │  │ Summary        │  │ Progress Eval      │
+│  - Subject     │  │ - Exec summary │  │ - Improvements     │
+│  - Subtopics   │  │ - Key points   │  │ - Gaps             │
+│  - Objectives  │  │ - Misconcep.   │  │ - Next goals       │
+└───────┬────────┘  └────────┬───────┘  │ - Rubric (0–3)     │
+	│                    │          └─────────┬──────────┘
+	│                    │                    │
+	▼                    │                    │
+┌────────────────┐           │                    │
+│ Quiz Generator │◄──────────┘                    │
+│ - 3–5 MCQs     │                                │
+│ - Difficulty   │                                │
+│ - Explanations │                                │
+└───────┬────────┘                                │
+	│                                         │
+	▼                                         │
+┌────────────────┐                                │
+│ Assignments    │                                │
+│ - Micro tasks  │                                │
+│ - Why it matters│                               │
+└───────┬────────┘                                │
+	│                                         │
+	▼                                         ▼
+ ┌─────────────────────────────────────────────────────┐
+ │                Teaching Pack (JSON)                 │
+ │  { topics, summary, progress, quiz, assignments }   │
+ └─────────────────────────┬───────────────────────────┘
+			   │
+			   ▼
+		 ┌────────────────────┐
+		 │ Tutor Dashboard    │
+		 │ - Edit & Review    │
+		 │ - Export PDF/link  │
+		 └─────────┬──────────┘
+			   │
+			   ▼
+		 ┌────────────────────┐
+		 │ Student Vault      │
+		 │ - Access shared    │
+		 │ - Quizzes/Feedback │
+		 └────────────────────┘
 ```
+
+Note: The core Teaching Pack today includes { topics, summary, progress, quiz }. The Assignments block is an optional extension.
 
 ## Storage model (ERD-style)
 
