@@ -5,21 +5,44 @@ const { generateSummary } = require("./steps/summary");
 const { evaluateProgress } = require("./steps/progress");
 const { generateQuizFromSummary } = require("./steps/quiz");
 const { saveTranscript, upsertSession, getPreviousTranscript } = require("./persist/store");
+const { normalizeQuiz } = require("./util/normalize");
+
+const pause = (ms) => new Promise((r) => setTimeout(r, ms));
+const STEP_PAUSE_MS = Number(process.env.LLM_STEP_PAUSE_MS || 0);
 
 async function runPipeline({ sessionId, studentId, rawTranscriptText }) {
   const pre = preprocess(rawTranscriptText, "en");
   await saveTranscript({ sessionId, clean: pre.cleanText, checksum: pre.checksum, segments: null, lang: pre.lang });
+  await upsertSession(sessionId, { status: 'transcribed' });
   const previousText = await getPreviousTranscript(sessionId, studentId);
-  const topics = await generateTopics(pre.cleanText);
+  const results = {};
+
+  // topics
+  const topics = await generateTopics(pre.llmText);
+  results.topics = topics;
   await upsertSession(sessionId, { topics });
-  const summary = await generateSummary(pre.cleanText);
+  if (STEP_PAUSE_MS) await pause(STEP_PAUSE_MS);
+
+  // summary
+  const summary = await generateSummary(pre.llmText);
+  results.summary = summary;
   await upsertSession(sessionId, { summary });
-  const progress = await evaluateProgress(pre.cleanText, previousText);
+  if (STEP_PAUSE_MS) await pause(STEP_PAUSE_MS);
+
+  // progress
+  const progress = await evaluateProgress(pre.llmText, previousText ? previousText.slice(0, pre.maxChars) : "");
+  results.progress = progress;
   await upsertSession(sessionId, { progress });
-  const quiz = await generateQuizFromSummary(summary);
-  await upsertSession(sessionId, { quiz });
-  const pack = { topics, summary, progress, quiz };
-  await upsertSession(sessionId, { pack, checksum: pre.checksum });
+  if (STEP_PAUSE_MS) await pause(STEP_PAUSE_MS);
+
+  // quiz
+  const quiz = await generateQuizFromSummary(results.summary);
+  const normalizedQuiz = normalizeQuiz(quiz);
+  results.quiz = normalizedQuiz;
+  await upsertSession(sessionId, { quiz: normalizedQuiz });
+
+  const pack = { topics: results.topics, summary: results.summary, progress: results.progress, quiz: results.quiz };
+  await upsertSession(sessionId, { pack, checksum: pre.checksum, status: 'processed' });
   return pack;
 }
 

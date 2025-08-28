@@ -11,7 +11,12 @@ const ProgressSchema = z.object({
       level: z.number().int().min(0).max(3),
       evidence: z.string().default("")
     })).length(3),
-    levels: z.record(z.string())
+    levels: z.record(z.string()).default({
+      "0": "not evident",
+      "1": "emerging",
+      "2": "developing",
+      "3": "proficient"
+    })
   })
 });
 
