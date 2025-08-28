@@ -9,7 +9,7 @@ yarn-error.log*
 pids/
 .DS_Store
 data/  
-
+server.js
 # OS generated files
 .DS_Store
 Thumbs.db

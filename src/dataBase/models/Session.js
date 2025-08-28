@@ -29,7 +29,6 @@ const sessionSchema = new mongoose.Schema({
 
 sessionSchema.index({ tutorId: 1, createdAt: -1 });
 sessionSchema.index({ studentId: 1, createdAt: -1 });
-sessionSchema.index({ shareToken: 1 }, { unique: true, sparse: true });
 sessionSchema.index({ status: 1, createdAt: -1 });
 
 module.exports = mongoose.model('Session', sessionSchema);

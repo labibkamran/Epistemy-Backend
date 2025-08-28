@@ -27,7 +27,6 @@ const transcriptSchema = new mongoose.Schema({
   timestamps: { createdAt: 'createdAt', updatedAt: false }
 });
 
-transcriptSchema.index({ sessionId: 1 }, { unique: true });
 transcriptSchema.index({ checksum: 1 });
 
 module.exports = mongoose.model('Transcript', transcriptSchema);
