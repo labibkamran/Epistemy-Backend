@@ -14,7 +14,6 @@ async function runPipeline({ sessionId, studentId, rawTranscriptText }) {
   const pre = preprocess(rawTranscriptText, "en");
   await saveTranscript({ sessionId, clean: pre.cleanText, checksum: pre.checksum, segments: null, lang: pre.lang });
   await upsertSession(sessionId, { status: 'transcribed' });
-  const previousText = await getPreviousTranscript(sessionId, studentId);
   const results = {};
 
   // topics
@@ -30,7 +29,8 @@ async function runPipeline({ sessionId, studentId, rawTranscriptText }) {
   if (STEP_PAUSE_MS) await pause(STEP_PAUSE_MS);
 
   // progress
-  const progress = await evaluateProgress(pre.llmText, previousText ? previousText.slice(0, pre.maxChars) : "");
+  const prev = await getPreviousTranscript(sessionId, studentId);
+  const progress = await evaluateProgress(pre.llmText, prev ? prev.slice(0, pre.maxChars) : "");
   results.progress = progress;
   await upsertSession(sessionId, { progress });
   if (STEP_PAUSE_MS) await pause(STEP_PAUSE_MS);
