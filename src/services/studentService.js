@@ -2,6 +2,7 @@
 const User = require('../dataBase/models/User');
 const bcrypt = require('bcryptjs');
 const Session = require('../dataBase/models/Session');
+const StudentAttempt = require('../dataBase/models/StudentAttempt');
 
 async function signup({ name, email, password }) {
 	if (!name || !email || !password) throw new Error('name, email, password are required');
@@ -36,11 +37,104 @@ async function listSessionsByStudent(studentId) {
 	return { sessions: mapped };
 }
 
-async function listTutorsWithCalendly() {
-	const tutors = await User.find({ role: 'tutor', calendlyUrl: { $ne: null } })
-		.select('_id name email calendlyUrl')
+async function getSessionById(sessionId, studentId) {
+	if (!sessionId) throw new Error('sessionId is required');
+	if (!studentId) throw new Error('studentId is required');
+	
+	const session = await Session.findOne({ _id: sessionId, studentId })
+		.populate('tutorId', 'name')
 		.lean();
-	return { tutors: tutors.map(t => ({ id: t._id, name: t.name, email: t.email, calendlyUrl: t.calendlyUrl })) };
+	
+	if (!session) throw new Error('session not found or access denied');
+	
+	return { 
+		session: {
+			...session,
+			tutorName: session?.tutorId?.name || null
+		}
+	};
 }
 
-module.exports = { signup, login, listSessionsByStudent, listTutorsWithCalendly };
+async function saveQuizAttempt(sessionId, studentId, answers) {
+	if (!sessionId) throw new Error('sessionId is required');
+	if (!studentId) throw new Error('studentId is required');
+	if (!Array.isArray(answers)) throw new Error('answers must be an array');
+	
+	const session = await Session.findById(sessionId).lean();
+	if (!session || !session.quiz) throw new Error('session or quiz not found');
+	
+	const items = answers.map((answer, idx) => ({
+		idx,
+		given: answer,
+		correct: answer === session.quiz[idx]?.choices[session.quiz[idx]?.answer_index],
+		ts: new Date()
+	}));
+	
+	const correctCount = items.filter(item => item.correct).length;
+	const score = Math.round((correctCount / items.length) * 100);
+	
+	const attempt = await StudentAttempt.create({
+		sessionId,
+		studentId,
+		items,
+		score
+	});
+	
+	return { attempt };
+}
+
+async function getSessionAttempts(sessionId, studentId) {
+	if (!sessionId) throw new Error('sessionId is required');
+	if (!studentId) throw new Error('studentId is required');
+	
+	const attempts = await StudentAttempt.find({ sessionId, studentId })
+		.sort({ createdAt: -1 })
+		.select('score createdAt')
+		.lean();
+	
+	return { attempts };
+}
+
+async function getStudentStats(studentId) {
+	if (!studentId) throw new Error('studentId is required');
+	
+	const totalSessions = await Session.countDocuments({ studentId });
+	
+	const sessionsWithProgress = await Session.find({ 
+		studentId, 
+		'progress.score': { $exists: true, $ne: null } 
+	}).select('progress.score').lean();
+
+	const progressScores = sessionsWithProgress.map(s => s.progress.score).filter(v => typeof v === 'number');
+	const avgProgress = progressScores.length ? Math.round(progressScores.reduce((a, b) => a + b, 0) / progressScores.length) : 0;
+	
+	const completedQuizzes = await StudentAttempt.countDocuments({ studentId });
+	
+	return { 
+		totalSessions, 
+		avgProgress, 
+		completedQuizzes 
+	};
+}
+
+async function listTutorsWithCalendly() {
+	const tutors = await User.find({ role: 'tutor', calendlyUrl: { $ne: null } })
+		.select('_id name email calendlyUrl sessionPrice')
+		.lean();
+	
+	const tutorsWithStats = await Promise.all(tutors.map(async (tutor) => {
+		const sessionCount = await Session.countDocuments({ tutorId: tutor._id });
+		return {
+			id: tutor._id,
+			name: tutor.name,
+			email: tutor.email,
+			calendlyUrl: tutor.calendlyUrl,
+			sessionCount: sessionCount,
+			sessionPrice: tutor.sessionPrice || 0
+		};
+	}));
+	
+	return { tutors: tutorsWithStats };
+}
+
+module.exports = { signup, login, listSessionsByStudent, getSessionById, saveQuizAttempt, getSessionAttempts, getStudentStats, listTutorsWithCalendly };
