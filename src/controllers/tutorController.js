@@ -40,6 +40,37 @@ exports.getSession = async (req, res) => {
 	}
 };
 
+exports.listSessionsByTutor = async (req, res) => {
+	try {
+		const { tutorId } = req.params;
+		const result = await tutorService.listSessionsByTutor(tutorId);
+		res.json(result);
+	} catch (e) {
+		res.status(400).json({ error: e.message });
+	}
+};
+
+exports.updateSession = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const patch = req.body || {};
+		const result = await tutorService.updateSession(id, patch);
+		if (!result) return res.status(404).json({ error: 'not found' });
+		res.json(result);
+	} catch (e) {
+		res.status(400).json({ error: e.message });
+	}
+};
+
+exports.listStudents = async (_req, res) => {
+	try {
+		const result = await tutorService.listStudents();
+		res.json(result);
+	} catch (e) {
+		res.status(400).json({ error: e.message });
+	}
+};
+
 exports.processSession = (req, res) => {
 	upload(req, res, async (err) => {
 		if (err) return res.status(400).json({ error: err.message });

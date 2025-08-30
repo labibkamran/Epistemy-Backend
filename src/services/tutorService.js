@@ -44,5 +44,25 @@ async function getSession(id) {
 	return session ? { session } : null;
 }
 
-module.exports = { runPipelineForTranscript, signup, login, createSession, getSession };
+async function listSessionsByTutor(tutorId) {
+	if (!tutorId) throw new Error('tutorId is required');
+	const sessions = await Session.find({ tutorId }).sort({ createdAt: -1 }).lean();
+	return { sessions };
+}
+
+async function updateSession(id, patch) {
+	const allowed = ['title', 'topics', 'summary', 'progress', 'quiz', 'paid', 'status', 'studentId'];
+	const toSet = {};
+	for (const k of allowed) if (k in patch) toSet[k] = patch[k];
+	const updated = await Session.findByIdAndUpdate(id, { $set: toSet }, { new: true }).lean();
+	return updated ? { session: updated } : null;
+}
+
+async function listStudents() {
+	// returns all users with role 'student'
+	const users = await User.find({ role: 'student' }).select('_id name email').lean();
+	return { students: users.map(u => ({ id: u._id, name: u.name, email: u.email })) };
+}
+
+module.exports = { runPipelineForTranscript, signup, login, createSession, getSession, listSessionsByTutor, updateSession, listStudents };
 

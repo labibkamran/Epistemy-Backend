@@ -8,6 +8,9 @@ router.post('/signup', tutorController.signup);
 router.post('/login', tutorController.login);
 router.post('/session', tutorController.createSession);
 router.get('/session/:id', tutorController.getSession);
+router.patch('/session/:id', tutorController.updateSession);
+router.get('/sessions/:tutorId', tutorController.listSessionsByTutor);
+router.get('/students', tutorController.listStudents);
 router.post('/process-session', tutorController.processSession);
 router.get('/jobs/:jobId', (req, res) => {
 	const job = jobsStore.get(req.params.jobId);
