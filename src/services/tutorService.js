@@ -9,12 +9,14 @@ async function runPipelineForTranscript(sessionId, studentId, rawText) {
 	return pack;
 }
 
-async function signup({ name, email, password, calendlyUrl = null }) {
+async function signup({ name, email, password, calendlyUrl = null, sessionPrice = null }) {
 	if (!name || !email || !password) throw new Error('name, email, password are required');
 	const existing = await User.findOne({ email }).lean();
 	if (existing) throw new Error('email already registered');
 	const passwordHash = await bcrypt.hash(password, 10);
-	const user = await User.create({ name, email, passwordHash, role: 'tutor', calendlyUrl });
+	const doc = { name, email, passwordHash, role: 'tutor', calendlyUrl };
+	if (sessionPrice !== null && sessionPrice !== undefined) doc.sessionPrice = Number(sessionPrice);
+	const user = await User.create(doc);
 	return { user: sanitize(user) };
 }
 
@@ -28,7 +30,7 @@ async function login({ email, password }) {
 }
 
 function sanitize(u) {
-	return { id: u._id, name: u.name, email: u.email, role: u.role, calendlyUrl: u.calendlyUrl };
+	return { id: u._id, name: u.name, email: u.email, role: u.role, calendlyUrl: u.calendlyUrl, sessionPrice: u.sessionPrice ?? null };
 }
 
 module.exports = { runPipelineForTranscript, signup, login };
@@ -70,12 +72,20 @@ async function getProfile(id) {
 	return { user: sanitize(user) };
 }
 
-async function updateProfile(id, { calendlyUrl = null }) {
+async function updateProfile(id, { calendlyUrl, sessionPrice } = {}) {
 	if (!id) throw new Error('id is required');
+	const set = {};
+	if (calendlyUrl !== undefined) {
+		set.calendlyUrl = calendlyUrl ?? null;
+	}
+	if (sessionPrice !== undefined) {
+		if (sessionPrice === null || sessionPrice === '') set.sessionPrice = null;
+		else set.sessionPrice = Number(sessionPrice);
+	}
 	const updated = await User.findOneAndUpdate(
 		{ _id: id, role: 'tutor' },
-		{ $set: { calendlyUrl: calendlyUrl ?? null } },
-		{ new: true }
+		{ $set: set },
+		{ new: true, runValidators: true }
 	).lean();
 	if (!updated) return null;
 	return { user: sanitize(updated) };

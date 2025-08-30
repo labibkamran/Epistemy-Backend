@@ -1,6 +1,7 @@
 // Student service: signup and login
 const User = require('../dataBase/models/User');
 const bcrypt = require('bcryptjs');
+const Session = require('../dataBase/models/Session');
 
 async function signup({ name, email, password }) {
 	if (!name || !email || !password) throw new Error('name, email, password are required');
@@ -25,3 +26,21 @@ function sanitize(u) {
 }
 
 module.exports = { signup, login };
+async function listSessionsByStudent(studentId) {
+	if (!studentId) throw new Error('studentId is required');
+	const sessions = await Session.find({ studentId })
+		.sort({ createdAt: -1 })
+		.populate('tutorId', 'name')
+		.lean();
+	const mapped = sessions.map(s => ({ ...s, tutorName: s?.tutorId?.name || null }));
+	return { sessions: mapped };
+}
+
+async function listTutorsWithCalendly() {
+	const tutors = await User.find({ role: 'tutor', calendlyUrl: { $ne: null } })
+		.select('_id name email calendlyUrl')
+		.lean();
+	return { tutors: tutors.map(t => ({ id: t._id, name: t.name, email: t.email, calendlyUrl: t.calendlyUrl })) };
+}
+
+module.exports = { signup, login, listSessionsByStudent, listTutorsWithCalendly };

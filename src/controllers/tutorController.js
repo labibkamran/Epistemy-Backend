@@ -35,8 +35,8 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
 	try {
 		const { id } = req.params;
-		const { calendlyUrl } = req.body || {};
-		const result = await tutorService.updateProfile(id, { calendlyUrl });
+	const { calendlyUrl, sessionPrice } = req.body || {};
+	const result = await tutorService.updateProfile(id, { calendlyUrl, sessionPrice });
 		if (!result) return res.status(404).json({ error: 'not found' });
 		res.json(result);
 	} catch (e) {
