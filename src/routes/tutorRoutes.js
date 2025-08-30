@@ -6,6 +6,9 @@ const { jobsStore } = require('../../server');
 
 router.post('/signup', tutorController.signup);
 router.post('/login', tutorController.login);
+// Tutor profile
+router.get('/profile/:id', tutorController.getProfile);
+router.patch('/profile/:id', tutorController.updateProfile);
 router.post('/session', tutorController.createSession);
 router.get('/session/:id', tutorController.getSession);
 router.patch('/session/:id', tutorController.updateSession);

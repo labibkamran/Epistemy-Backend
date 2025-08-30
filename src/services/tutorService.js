@@ -63,6 +63,23 @@ async function listStudents() {
 	const users = await User.find({ role: 'student' }).select('_id name email').lean();
 	return { students: users.map(u => ({ id: u._id, name: u.name, email: u.email })) };
 }
+async function getProfile(id) {
+	if (!id) throw new Error('id is required');
+	const user = await User.findOne({ _id: id, role: 'tutor' }).lean();
+	if (!user) return null;
+	return { user: sanitize(user) };
+}
 
-module.exports = { runPipelineForTranscript, signup, login, createSession, getSession, listSessionsByTutor, updateSession, listStudents };
+async function updateProfile(id, { calendlyUrl = null }) {
+	if (!id) throw new Error('id is required');
+	const updated = await User.findOneAndUpdate(
+		{ _id: id, role: 'tutor' },
+		{ $set: { calendlyUrl: calendlyUrl ?? null } },
+		{ new: true }
+	).lean();
+	if (!updated) return null;
+	return { user: sanitize(updated) };
+}
+
+module.exports = { runPipelineForTranscript, signup, login, createSession, getSession, listSessionsByTutor, updateSession, listStudents, getProfile, updateProfile };
 

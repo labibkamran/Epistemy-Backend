@@ -21,6 +21,29 @@ exports.login = async (req, res) => {
 	}
 };
 
+exports.getProfile = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const result = await tutorService.getProfile(id);
+		if (!result) return res.status(404).json({ error: 'not found' });
+		res.json(result);
+	} catch (e) {
+		res.status(400).json({ error: e.message });
+	}
+};
+
+exports.updateProfile = async (req, res) => {
+	try {
+		const { id } = req.params;
+		const { calendlyUrl } = req.body || {};
+		const result = await tutorService.updateProfile(id, { calendlyUrl });
+		if (!result) return res.status(404).json({ error: 'not found' });
+		res.json(result);
+	} catch (e) {
+		res.status(400).json({ error: e.message });
+	}
+};
+
 exports.createSession = async (req, res) => {
 	try {
 		const result = await tutorService.createSession(req.body);
