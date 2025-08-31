@@ -1,6 +1,5 @@
 // Entry point for Epistemy Backend
 require('dotenv').config();
-const { app, server } = require('./server');
 const tutorRoutes = require('./src/routes/tutorRoutes');
 const studentRoutes = require('./src/routes/studentRoutes');
 const connectDB = require('./src/dataBase/config');

@@ -42,8 +42,20 @@ async function createSession({ tutorId, studentId = null, title = null, paid = f
 }
 
 async function getSession(id) {
-	const session = await Session.findById(id).lean();
-	return session ? { session } : null;
+	const session = await Session.findById(id)
+		.populate('studentId', 'name email')
+		.populate('tutorId', 'name email')
+		.lean()
+	
+	if (session && session.studentId) {
+		session.studentName = session.studentId.name
+	}
+	
+	if (session && session.tutorId) {
+		session.tutorName = session.tutorId.name
+	}
+	
+	return session ? { session } : null
 }
 
 async function listSessionsByTutor(tutorId) {
