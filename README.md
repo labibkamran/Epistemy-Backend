@@ -2,6 +2,28 @@
 
 Production-ready Node/Express backend for Epistemy with MongoDB persistence and an AI pipeline that turns tutoring transcripts into a structured Teaching Pack.
 
+## 📚 **Table of Contents**
+
+- [Overview](#overview)
+  - [The Epistemy Vision](#-the-epistemy-vision)
+  - [The Complete Learning Journey](#-the-complete-learning-journey)
+  - [Backend Architecture Highlights](#️-backend-architecture-highlights)
+  - [The Complete Flow in Action](#️-the-complete-flow-in-action)
+- [AI Pipeline](#ai-pipeline)
+  - [Pipeline Stages](#pipeline-stages)
+  - [AI Models & Configuration](#ai-models--configuration)
+  - [Error Handling & Recovery](#error-handling--recovery)
+- [Database Diagram](#database-diagram)
+- [Deployment Guide](#-deployment-guide)
+  - [Requirements](#requirements)
+  - [Installation & Setup](#installation--setup)
+  - [API Endpoints](#api-endpoints)
+  - [Testing the API](#testing-the-api)
+  - [Production Deployment](#production-deployment)
+  - [Troubleshooting](#troubleshooting)
+  - [Performance Optimization](#performance-optimization)
+  - [Security Considerations](#security-considerations)
+
 ## Overview
 
 Welcome to **Epistemy** - an intelligent tutoring platform that transforms raw video sessions into structured, AI-powered learning experiences. Let me tell you the story of how our backend orchestrates this magical transformation.
