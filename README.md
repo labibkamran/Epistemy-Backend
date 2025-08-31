@@ -116,4 +116,226 @@ Our platform seamlessly integrates with external services:
 
 ![Database Diagram](https://res.cloudinary.com/dwakiaafh/image/upload/v1756617058/epistemy_flow_diagram_white_nyoj5d.png)
 
+## 🚀 **Deployment Guide**
+
+### **Requirements**
+
+- **Node.js**: Version 18 or higher
+- **MongoDB**: Version 6 or higher
+- **npm** or **yarn** package manager
+- **Git** for cloning the repository
+
+### **Installation & Setup**
+
+#### **1. Clone the Repository**
+```bash
+git clone <your-repository-url>
+cd Epistemy-Backend
+```
+
+#### **2. Install Dependencies**
+```bash
+npm install
+```
+
+#### **3. Environment Configuration**
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Server Configuration
+PORT=4000
+NODE_ENV=development
+
+# Database Configuration
+MONGODB_URI=mongodb://localhost:27017/epistemy
+
+# AI/LLM Configuration
+GROQ_API_KEY=gsk_your_groq_api_key_here
+GROQ_BASE_URL=https://api.groq.com/openai/v1
+
+# Model Configuration (examples)
+MODEL_TOPICS=mixtral-8x7b-32768
+MODEL_SUMMARY=mixtral-8x7b-32768
+MODEL_PROGRESS=mixtral-8x7b-32768
+MODEL_QUIZ=mixtral-8x7b-32768
+
+# Token Limits
+MAX_INPUT_CHARS=12000
+MAX_OUTPUT_TOKENS=600
+MAX_OUTPUT_TOKENS_PROGRESS=900
+MAX_OUTPUT_TOKENS_QUIZ=700
+
+# Performance Configuration
+LLM_STEP_PAUSE_MS=200
+
+# Frontend URL (for CORS and sharing)
+FRONTEND_URL=http://localhost:5173
+```
+
+#### **4. Database Setup**
+```bash
+# Start MongoDB (if running locally)
+mongod
+
+# Or use MongoDB Atlas (cloud)
+# Update MONGODB_URI in .env with your Atlas connection string
+```
+
+#### **5. Run the Application**
+
+**Development Mode:**
+```bash
+npm run dev
+```
+
+**Production Mode:**
+```bash
+npm start
+```
+
+**Build and Run:**
+```bash
+npm run build
+npm start
+```
+
+### **API Endpoints**
+
+#### **Tutor Routes**
+- `POST /tutor/signup` - Tutor registration
+- `POST /tutor/login` - Tutor authentication
+- `POST /tutor/session` - Create new session
+- `POST /tutor/process-session` - Upload and process transcript
+- `GET /tutor/sessions/:tutorId` - Get tutor's sessions
+- `GET /tutor/session/:sessionId` - Get specific session
+- `PATCH /tutor/session/:sessionId` - Update session
+- `GET /tutor/students` - List all students
+- `GET /tutor/profile/:tutorId` - Get tutor profile
+- `PATCH /tutor/profile/:tutorId` - Update tutor profile
+
+#### **Student Routes**
+- `POST /student/signup` - Student registration
+- `POST /student/login` - Student authentication
+- `GET /student/sessions/:studentId` - Get student's sessions
+- `GET /student/session/:sessionId` - Get specific session details
+- `POST /student/session/:sessionId/quiz` - Submit quiz attempt
+- `GET /student/session/:sessionId/attempts` - Get quiz attempt history
+- `GET /student/stats/:studentId` - Get student statistics
+- `GET /student/tutors` - List available tutors with Calendly links
+
+### **Testing the API**
+
+#### **Using Postman or cURL**
+
+**1. Test Tutor Signup:**
+```bash
+curl -X POST http://localhost:4000/tutor/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "password123",
+    "calendlyUrl": "https://calendly.com/johndoe",
+    "sessionPrice": 50
+  }'
+```
+
+**2. Test Session Creation:**
+```bash
+curl -X POST http://localhost:4000/tutor/session \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{
+    "tutorId": "tutor_id_here",
+    "title": "Mathematics Session",
+    "studentId": "student_id_here",
+    "paid": false
+  }'
+```
+
+### **Production Deployment**
+
+#### **Environment Variables for Production**
+```env
+NODE_ENV=production
+PORT=4000
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/epistemy
+GROQ_API_KEY=your_production_groq_key
+FRONTEND_URL=https://yourdomain.com
+```
+
+#### **Docker Deployment**
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci --only=production
+COPY . .
+EXPOSE 4000
+CMD ["npm", "start"]
+```
+
+#### **PM2 Process Management**
+```bash
+# Install PM2 globally
+npm install -g pm2
+
+# Start the application
+pm2 start npm --name "epistemy-backend" -- start
+
+# Monitor the application
+pm2 monit
+
+# Restart the application
+pm2 restart epistemy-backend
+```
+
+### **Troubleshooting**
+
+#### **Common Issues**
+
+**1. MongoDB Connection Error:**
+- Ensure MongoDB is running
+- Check connection string in `.env`
+- Verify network access for cloud databases
+
+**2. AI Pipeline Failures:**
+- Verify GROQ_API_KEY is valid
+- Check token limits in environment variables
+- Monitor API rate limits
+
+**3. File Upload Issues:**
+- Ensure proper file format (.txt for transcripts)
+- Check file size limits
+- Verify multer configuration
+
+#### **Logs and Debugging**
+```bash
+# View application logs
+npm run dev
+
+# Check MongoDB logs
+tail -f /var/log/mongodb/mongod.log
+
+# Monitor API requests
+# Check browser developer tools for frontend errors
+```
+
+### **Performance Optimization**
+
+- **Database Indexing**: Already configured for optimal query performance
+- **Token Management**: Configured to handle rate limits efficiently
+- **Error Recovery**: Robust fallback mechanisms for AI processing
+- **Caching**: Implement Redis for session caching (optional enhancement)
+
+### **Security Considerations**
+
+- **Password Hashing**: Uses bcrypt for secure password storage
+- **JWT Authentication**: Secure token-based authentication
+- **Input Validation**: Comprehensive data validation and sanitization
+- **CORS Configuration**: Properly configured for frontend integration
+- **Rate Limiting**: Built-in protection against API abuse
+
+Your Epistemy backend is now ready for deployment! 🎉
+
 
