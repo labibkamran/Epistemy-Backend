@@ -5,14 +5,7 @@ Production-ready Node/Express backend for Epistemy with MongoDB persistence and 
 ## 📚 **Table of Contents**
 
 - [Overview](#overview)
-  - [The Epistemy Vision](#-the-epistemy-vision)
-  - [The Complete Learning Journey](#-the-complete-learning-journey)
-  - [Backend Architecture Highlights](#️-backend-architecture-highlights)
-  - [The Complete Flow in Action](#️-the-complete-flow-in-action)
-- [AI Pipeline](#ai-pipeline)
-  - [Pipeline Stages](#pipeline-stages)
-  - [AI Models & Configuration](#ai-models--configuration)
-  - [Error Handling & Recovery](#error-handling--recovery)
+- [AI Pipeline (High-Level Diagram)](#ai-pipeline-high-level-diagram)
 - [Database Diagram](#database-diagram)
 - [Deployment Guide](#-deployment-guide)
   - [Requirements](#requirements)
@@ -133,6 +126,35 @@ Our platform seamlessly integrates with external services:
 ## AI Pipeline (High-Level Diagram)
 
 ![AI Pipeline](https://res.cloudinary.com/dwakiaafh/image/upload/v1756441896/epistemy_pipeline_sketchflow_v2_fhipzl.png)
+
+### **AI Pipeline Overview**
+
+The Epistemy AI pipeline transforms raw tutoring transcripts into structured, intelligent learning content through a sophisticated 5-stage process:
+
+**🔍 Stage 1: Preprocessing & Language Detection**
+- Text cleaning and normalization
+- Automatic language detection
+- Content integrity validation
+
+**📚 Stage 2: Topic Extraction & Organization**
+- Main subject identification
+- Logical subtopic breakdown
+- Learning objective creation
+
+**📝 Stage 3: Executive Summary Generation**
+- Comprehensive session summaries
+- Key learning point extraction
+- Misconception identification
+
+**📊 Stage 4: Progress Evaluation & Assessment**
+- Multi-session progress comparison
+- Personalized improvement recommendations
+- Evidence-based performance rubrics
+
+**🎯 Stage 5: Interactive Quiz Creation**
+- Progression-aware practice questions
+- Multiple-choice format with explanations
+- Adaptive difficulty based on content
 
 ## Database Diagram
 
